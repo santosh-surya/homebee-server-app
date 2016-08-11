@@ -1,56 +1,148 @@
-angular.module('starter.controllers', [])
 
-.controller('AppCtrl', function($scope, $ionicModal, $timeout) {
+angular.module('homebee.controllers', ['homebee.factories', 'homebee.session'])
 
-  // With the new view caching in Ionic, Controllers are only called
-  // when they are recreated or on app start, instead of every page change.
-  // To listen for when this page is active (for example, to refresh data),
-  // listen for the $ionicView.enter event:
-  //$scope.$on('$ionicView.enter', function(e) {
-  //});
-
+.controller('HomebeeCtrl', function($scope, $ionicLoading, $ionicModal, APIFactory, Dialogs) {
+  //root scope holds application wide information
+  $scope.loggedIn = false;
+  $scope.user = null;
   // Form data for the login modal
-  $scope.loginData = {};
-
-  // Create the login modal that we will use later
-  $ionicModal.fromTemplateUrl('templates/login.html', {
-    scope: $scope
-  }).then(function(modal) {
-    $scope.modal = modal;
-  });
-
-  // Triggered in the login modal to close it
-  $scope.closeLogin = function() {
-    $scope.modal.hide();
-  };
-
-  // Open the login modal
-  $scope.login = function() {
-    $scope.modal.show();
-  };
-
-  // Perform the login action when the user submits the login form
+  $scope.loginData = {}
+  //email:"santosh.singh@surya-solutions.com", password:"password"};
+  $scope.Dialogs = Dialogs;
+  //show the Login dialog
+  $scope.showLogin = function(){
+    $ionicModal.fromTemplateUrl('templates/login-modal.html', {
+      scope: $scope,
+      animation: 'slide-in-left',
+      backdropClickToClose: false,
+      hardwareBackButtonClose: false
+    }).then(function(modal) {
+      $scope.loginModal = modal;
+      modal.show();
+    });
+  }
+  //deal with login button click
   $scope.doLogin = function() {
-    console.log('Doing login', $scope.loginData);
+    //call login api
+    APIFactory.login($scope)
+      .then(function(user){
+        $scope.loginModal.hide();
+        $scope.user = user.data;
+        APIFactory.getUserDevices($scope)
+          .then(function(devices){
+            $scope.user.devices = devices;
+            $scope.$apply();
+          })
+          .catch(function(err){
+            $scope.error="Error Logging In";
+            $scope.error_description = err;
+            Dialogs.showError($scope);
+          })
+      })
+      .catch(function(err){
+        $scope.error="Error Logging In";
+        $scope.error_description = err;
+        Dialogs.showError($scope);
+      })
+    }
+  $scope.hideLogin = function(){
 
-    // Simulate a login delay. Remove this and replace with your login
-    // code if using a login system
-    $timeout(function() {
-      $scope.closeLogin();
-    }, 1000);
+  }
+})
+
+.controller('DashboardCtrl', function($scope, $ionicLoading, APIFactory, $cordovaCamera) {
+  //must be in every controller to ensure user is logged in
+  $scope.$on('$ionicView.enter', function(e) {
+    console.log('entered dashboard');
+    if (!$scope.user){
+      $scope.showLogin();
+    }
+  });
+  $scope.refreshUserDevices = function() {
+    APIFactory.getUserDevices($scope)
+      .then(function(devices){
+        $scope.user.devices = devices;
+        $scope.$apply();
+        $scope.$broadcast('scroll.refreshComplete');
+      })
+      .catch(function(err){
+        $scope.$broadcast('scroll.refreshComplete');
+        $scope.error="Error Logging In";
+        $scope.error_description = err;
+        Dialogs.showError($scope);
+      })
   };
+  $scope.takePhoto = function () {
+    console.log($cordovaCamera);
+
+    var options = {
+      quality: 75,
+      destinationType: Camera.DestinationType.DATA_URL,
+      sourceType: Camera.PictureSourceType.CAMERA,
+      allowEdit: true,
+      encodingType: Camera.EncodingType.JPEG,
+      targetWidth: 300,
+      targetHeight: 300,
+      popoverOptions: CameraPopoverOptions,
+      saveToPhotoAlbum: false
+    };
+    $cordovaCamera.getPicture(options).then(function (imageData) {
+        $scope.imgURI = "data:image/jpeg;base64," + imageData;
+    }, function (err) {
+        // An error occured. Show a message to the user
+    });
+  }
+  $scope.choosePhoto = function () {
+    var options = {
+      quality: 75,
+      destinationType: Camera.DestinationType.DATA_URL,
+      sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
+      allowEdit: true,
+      encodingType: Camera.EncodingType.JPEG,
+      targetWidth: 300,
+      targetHeight: 300,
+      popoverOptions: CameraPopoverOptions,
+      saveToPhotoAlbum: false
+    };
+    $cordovaCamera.getPicture(options).then(function (imageData) {
+        $scope.imgURI = "data:image/jpeg;base64," + imageData;
+    }, function (err) {
+        // An error occured. Show a message to the user
+    });
+  }
+})
+.controller('ErrorCtrl', function($scope, $stateParams, APIFactory) {
+  $scope.$on('$ionicView.enter', function(e) {
+    switch ($stateParams.type) {
+      case 'token_error':
+        $scope.error = 'Server connection failed';
+        $scope.error_description = $stateParams.error_description;
+        break;
+      default:
+        $scope.error = $stateParams.error;
+        $scope.error_description = $stateParams.error_description;
+    }
+  });
+})
+.controller('AdminCtrl', function($scope, $timeout, APIFactory) {
+  $scope.$on('$ionicView.enter', function(e) {
+    console.log('AdminCtrl view entered');
+  });
+  $scope.onAdminDevicesRefresh = function(){
+    console.log('now refreshing devices');
+    $timeout(2000).then(function(){
+      console.log('refreshed');
+      $scope.$broadcast('scroll.refreshComplete');
+    })
+  }
+  $scope.onAdminUsersRefresh = function(){
+    console.log('now refreshing users');
+    $timeout(2000).then(function(){
+      console.log('refreshed');
+      $scope.$broadcast('scroll.refreshComplete');
+    })
+  }
 })
 
-.controller('PlaylistsCtrl', function($scope) {
-  $scope.playlists = [
-    { title: 'Reggae', id: 1 },
-    { title: 'Chill', id: 2 },
-    { title: 'Dubstep', id: 3 },
-    { title: 'Indie', id: 4 },
-    { title: 'Rap', id: 5 },
-    { title: 'Cowbell', id: 6 }
-  ];
-})
 
-.controller('PlaylistCtrl', function($scope, $stateParams) {
-});
+;

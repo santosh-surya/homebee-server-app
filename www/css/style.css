@@ -1,1 +1,19 @@
 /* Empty. Add your own CSS if you like */
+.form-error{
+  margin-right: 20px;
+  margin-bottom: 20px;
+  float: left;
+  color: red;
+}
+.login-form{
+  height: 325px;
+}
+ion-side-menu a{
+  cursor: pointer;
+}
+.col-center{
+  text-align: center;
+}
+.col-right{
+  text-align: right;
+}
