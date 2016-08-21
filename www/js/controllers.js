@@ -1,10 +1,17 @@
 
 angular.module('homebee.controllers', ['homebee.factories', 'homebee.session'])
 
-.controller('HomebeeCtrl', function($scope, $ionicLoading, $ionicModal, APIFactory, Dialogs) {
+.controller('HomebeeCtrl', function($state, $scope, $window, $ionicLoading, $ionicModal, APIFactory, Dialogs) {
   //root scope holds application wide information
   $scope.loggedIn = false;
   $scope.user = null;
+  $scope.logs = [];
+  $scope.log = function(log) {
+    $scope.logs.unshift({time: new Date().toTimeString(), message: log});
+  }
+  $scope.clearLogs = function(){
+    $scope.logs = [];
+  }
   // Form data for the login modal
   $scope.loginData = {}
   //email:"santosh.singh@surya-solutions.com", password:"password"};
@@ -26,6 +33,7 @@ angular.module('homebee.controllers', ['homebee.factories', 'homebee.session'])
     //call login api
     APIFactory.login($scope)
       .then(function(user){
+        $scope.log('login successful');
         $scope.loginModal.hide();
         $scope.user = user.data;
         APIFactory.getUserDevices($scope)
@@ -34,26 +42,34 @@ angular.module('homebee.controllers', ['homebee.factories', 'homebee.session'])
             $scope.$apply();
           })
           .catch(function(err){
+            $scope.log(err);
             $scope.error="Error Logging In";
             $scope.error_description = err;
             Dialogs.showError($scope);
           })
       })
       .catch(function(err){
+        $scope.loginModal.hide();
+        $scope.user = null;
+        console.log(err);
         $scope.error="Error Logging In";
         $scope.error_description = err;
         Dialogs.showError($scope);
       })
-    }
+  }
+  $scope.logout = function(){
+    $scope.user = null;
+    $state.reload();
+  }
   $scope.hideLogin = function(){
 
   }
 })
 
-.controller('DashboardCtrl', function($scope, $ionicLoading, APIFactory, $cordovaCamera) {
+.controller('DashboardCtrl', function($scope, $rootScope, $ionicLoading, APIFactory, $cordovaCamera) {
   //must be in every controller to ensure user is logged in
   $scope.$on('$ionicView.enter', function(e) {
-    console.log('entered dashboard');
+    console.log('dashboard entered');
     if (!$scope.user){
       $scope.showLogin();
     }
@@ -126,19 +142,14 @@ angular.module('homebee.controllers', ['homebee.factories', 'homebee.session'])
 })
 .controller('AdminCtrl', function($scope, $timeout, APIFactory) {
   $scope.$on('$ionicView.enter', function(e) {
-    console.log('AdminCtrl view entered');
   });
   $scope.onAdminDevicesRefresh = function(){
-    console.log('now refreshing devices');
     $timeout(2000).then(function(){
-      console.log('refreshed');
       $scope.$broadcast('scroll.refreshComplete');
     })
   }
   $scope.onAdminUsersRefresh = function(){
-    console.log('now refreshing users');
     $timeout(2000).then(function(){
-      console.log('refreshed');
       $scope.$broadcast('scroll.refreshComplete');
     })
   }

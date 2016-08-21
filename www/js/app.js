@@ -58,6 +58,15 @@ angular.module('homebee', ['ionic', 'ngCordova', 'homebee.controllers', 'homebee
       }
     }
   })
+  .state('homebee.admin-logs', {
+    url: '/admin-logs',
+    views: {
+      'menuContent': {
+        templateUrl: 'templates/logs.html',
+        controller: 'AdminCtrl'
+      }
+    }
+  })
 
   // if none of the above states are matched, use this as the fallback
   $urlRouterProvider.otherwise('/homebee/dashboard');

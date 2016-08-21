@@ -1,5 +1,5 @@
 <div class="row">
-  <div class="card col">
+  <div class="card col"  ng-if="user.devices.length>0">
     <ion-refresher
         pulling-text="refresh device list ..."
         on-refresh="refreshUserDevices()">
@@ -11,10 +11,15 @@
           {{device.deviceUUID}}
           <i class="icon ion-ios-telephone-outline"></i>
         </a>
-        <div ng-if="device.deviceTYPE == 'divider'" ng-class="item item-divider">
+        <div ng-if="device.deviceTYPE == 'divider'" ng-class="item-divider">
           {{device.deviceUUID}}
         </div>
       </ion-item>
     </ion-list>
   </div>
+  <div class="card col"  ng-if="!user">
+    You must login to see devices
+  </div>
+</div>
+<div class="row">
 </div>

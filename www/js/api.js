@@ -26,22 +26,26 @@ angular.module('homebee.factories', ['homebee.constants'])
 
 .factory('APIConfig', function($location, CONSTANTS){
   var config = {};
-  // _host = $location.host();
+  _host = $location.host();
+  // _host = '37.188.116.81';
+  // _host = 'localhost';
   // _port = $location.port();
-  _host = '192.168.1.12';
+  // _port = '4000';
   _port = '4043';
-  console.log(_host+':'+_port);
+  // _scheme = 'http';
+  _scheme = 'https';
+
   _version = '1.0';
   _tokenPath = 'oauth/token'
   _debug = '?debug';
   config.tokenURL = function() {
-    return 'https://'+_host+':'+_port+'/'+_version+'/'+_tokenPath+_debug;
+    return _scheme+'://'+_host+':'+_port+'/'+_version+'/'+_tokenPath+_debug;
   }
   config.loginURL = function() {
-    return 'https://'+_host+':'+_port+'/'+_version+'/homebee/login'+_debug;
+    return _scheme+'://'+_host+':'+_port+'/'+_version+'/homebee/login'+_debug;
   }
   config.getUserDevicesURL = function(){
-    return 'https://'+_host+':'+_port+'/'+_version+'/homebee/user-devices'+_debug;
+    return _scheme+'://'+_host+':'+_port+'/'+_version+'/homebee/user-devices'+_debug;
   }
 
   return config;
@@ -52,34 +56,14 @@ angular.module('homebee.factories', ['homebee.constants'])
   var _refreshToken = null;
   var _tokenExpiry = new Date();
   _getToken = function($scope){
-    return new Promise(function(resolve, reject, $scope){
-      $http({
-        method: 'POST',
+    var url = APIConfig.tokenURL();
+    console.log("getting token: "+url);
+    return $http.post(url, 'grant_type=password&client_id=HomeBeeApp&client_secret=HomeBee App Workers&username=homebeeapp&password=H0m3b33@pp',
+      {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        data: 'grant_type=password&client_id=HomeBeeApp&client_secret=HomeBee App Workers&username=homebeeapp&password=H0m3b33@pp',
-        url: APIConfig.tokenURL()
+        }
       })
-      .then(function successCallback(response) {
-          $ionicLoading.hide();
-          _accessToken = response.data.access_token;
-          _refreshToken = response.data.refresh_token;
-          _tokenExpiry = new Date();
-          _tokenExpiry.setTime(_tokenExpiry.getTime()-60000+response.data.expires_in*1000);
-          console.log('token expires: '+_tokenExpiry);
-          $ionicLoading.hide();
-          resolve();
-        }, function errorCallback(response) {
-          $scope.error = "Get Token Error";
-          $scope.error_description = response;
-          Dialogs.showError($scope);
-          $ionicLoading.hide();
-          $scope.error=response.data;
-          $scope.error_description = response.data.error_description;
-          reject(response.data.error_description);
-      });
-    });
   };
   _ensuerToken = function($scope){
     //ensure valid token exists
@@ -87,7 +71,13 @@ angular.module('homebee.factories', ['homebee.constants'])
       if (_accessToken == null){
         console.log('no access token found ... getting new one');
         _getToken($scope)
-          .then(function(){
+          .then(function(response){
+            console.log(response);
+              _accessToken = response.data.access_token;
+              _refreshToken = response.data.refresh_token;
+              _tokenExpiry = new Date();
+              _tokenExpiry.setTime(_tokenExpiry.getTime()-60000+response.data.expires_in*1000);
+              console.log('token expires: '+_tokenExpiry);
               resolve();
           })
           .catch(function(err){
@@ -135,7 +125,7 @@ angular.module('homebee.factories', ['homebee.constants'])
                 }
               },
               function errorCallback(response) {
-                $scope.error = "Get Token Error";
+                $scope.error = "Token Error";
                 $scope.error_description = response;
                 Dialogs.showError($scope);
                 if (response.data.code == CONSTANTS.LOGIN_ERROR){
@@ -144,11 +134,7 @@ angular.module('homebee.factories', ['homebee.constants'])
                   reject(response.data.error_description);
                 }
               }
-            )
-            .catch(function(err){
-              console.log(err);
-              reject(err);
-            });
+            );
           })
           .catch(function(err){
             console.log(err);
@@ -174,13 +160,12 @@ angular.module('homebee.factories', ['homebee.constants'])
                 if (response.data.code == CONSTANTS.SYSTEM_ERROR){
                   reject(CONSTANTS.SYSTEM_ERROR_MESSAGE);
                 }else{
-                  console.log(response.data.devices);
+                  console.log(JSON.stringify(response.data.devices, null, 4));
                   resolve(response.data.devices);
                 }
               },
               function errorCallback(response) {
                 console.log(response.data);
-                alert(response);
                 if (response.data.code == CONSTANTS.SYSTEM_ERROR){
                   reject(response.data);
                 }else{
