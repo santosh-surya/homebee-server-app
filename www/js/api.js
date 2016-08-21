@@ -55,6 +55,7 @@ angular.module('homebee.factories', ['homebee.constants'])
   var _accessToken = null;
   var _refreshToken = null;
   var _tokenExpiry = new Date();
+  //factory method to get new token
   _getToken = function($scope){
     var url = APIConfig.tokenURL();
     console.log("getting token: "+url);
