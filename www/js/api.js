@@ -57,7 +57,7 @@ angular.module('homebee.factories', ['homebee.constants'])
   var _tokenExpiry = new Date();
   _getToken = function($scope){
     var url = APIConfig.tokenURL();
-    console.log("getting token: "+url);
+    $scope.log("getting token: "+url);
     return $http.post(url, 'grant_type=password&client_id=HomeBeeApp&client_secret=HomeBee App Workers&username=homebeeapp&password=H0m3b33@pp',
       {
         headers: {
@@ -69,15 +69,15 @@ angular.module('homebee.factories', ['homebee.constants'])
     //ensure valid token exists
     var promise = new Promise(function(resolve, reject){
       if (_accessToken == null){
-        console.log('no access token found ... getting new one');
+        $scope.log('no access token found ... getting new one');
         _getToken($scope)
           .then(function(response){
-            console.log(response);
+            $scope.log(response);
               _accessToken = response.data.access_token;
               _refreshToken = response.data.refresh_token;
               _tokenExpiry = new Date();
               _tokenExpiry.setTime(_tokenExpiry.getTime()-60000+response.data.expires_in*1000);
-              console.log('token expires: '+_tokenExpiry);
+              $scope.log('token expires: '+_tokenExpiry);
               resolve();
           })
           .catch(function(err){
@@ -85,10 +85,10 @@ angular.module('homebee.factories', ['homebee.constants'])
           })
       }else{
         if (_tokenExpiry>new Date()){
-          console.log('access token found');
+          $scope.log('access token found');
           resolve();
         }else{
-          console.log('access token found but expired ... getting new one');
+          $scope.log('access token found but expired ... getting new one');
           _getToken($scope)
             .then(function(){
                 resolve();
@@ -137,13 +137,13 @@ angular.module('homebee.factories', ['homebee.constants'])
             );
           })
           .catch(function(err){
-            console.log(err);
+            $scope.log("token_error: "+err);
             reject(err);
           })
       });
     },
     getUserDevices: function($scope){
-      console.log('getting devices for user id: '+$scope.user._id);
+      $scope.log('getting devices for user id: '+$scope.user._id);
       return new Promise(function(resolve, reject){
         _ensuerToken($scope)
           .then(function(){
@@ -160,12 +160,12 @@ angular.module('homebee.factories', ['homebee.constants'])
                 if (response.data.code == CONSTANTS.SYSTEM_ERROR){
                   reject(CONSTANTS.SYSTEM_ERROR_MESSAGE);
                 }else{
-                  console.log(JSON.stringify(response.data.devices, null, 4));
+                  $scope.log(JSON.stringify(response.data.devices, null, 4));
                   resolve(response.data.devices);
                 }
               },
               function errorCallback(response) {
-                console.log(response.data);
+                //$scope.log(response.data);
                 if (response.data.code == CONSTANTS.SYSTEM_ERROR){
                   reject(response.data);
                 }else{
@@ -174,12 +174,12 @@ angular.module('homebee.factories', ['homebee.constants'])
               }
             )
             .catch(function(err){
-              console.log(err);
+              $scope.log(err);
               reject(err);
             });
           })
           .catch(function(err){
-            console.log(err);
+            $scope.log(err);
             reject(err);
           })
       });

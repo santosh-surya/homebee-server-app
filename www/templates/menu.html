@@ -20,13 +20,15 @@
         <ion-item ui-sref-active="active" menu-close ui-sref="homebee.dashboard">
           Dashboard
         </ion-item>
-        <ion-item ui-sref-active="active" menu-close ui-sref="homebee.admin-logs">
+        <ion-item ng-if="user.roles.includes('DEV_USER')" ui-sref-active="active" menu-close ui-sref="homebee.admin-logs">
           Debug Logs
         </ion-item>
-        <ion-item menu-close ng-click="logout()" ng-if="user" ui-sref="homebee.dashboard">
+        <ion-item menu-close ng-click="logout()" ng-if="user">
           Logout
         </ion-item>
-
+        <ion-item menu-close ng-click="showLogin()" ng-if="!user" >
+          Login
+        </ion-item>
       </ion-list>
       <ion-list ng-if="user.roles.includes('SUPER_ADMIN')">
         <ion-item ui-sref-active="active" menu-close ui-sref="homebee.admin-devices">

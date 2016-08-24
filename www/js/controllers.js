@@ -1,7 +1,7 @@
 
 angular.module('homebee.controllers', ['homebee.factories', 'homebee.session'])
 
-.controller('HomebeeCtrl', function($state, $scope, $window, $ionicLoading, $ionicModal, APIFactory, Dialogs) {
+.controller('HomebeeCtrl', function($state, $scope, $window, $ionicSideMenuDelegate, $ionicHistory, $ionicLoading, $ionicModal, APIFactory, Dialogs) {
   //root scope holds application wide information
   $scope.loggedIn = false;
   $scope.user = null;
@@ -60,6 +60,13 @@ angular.module('homebee.controllers', ['homebee.factories', 'homebee.session'])
   $scope.logout = function(){
     $scope.user = null;
     $state.reload();
+    $ionicHistory.nextViewOptions({
+      disableBack: true,
+      historyRoot: true
+    });
+    $ionicSideMenuDelegate.toggleLeft();
+    $state.go('homebee.dashboard');
+    $scope.showLogin();
   }
   $scope.hideLogin = function(){
 
@@ -69,10 +76,10 @@ angular.module('homebee.controllers', ['homebee.factories', 'homebee.session'])
 .controller('DashboardCtrl', function($scope, $rootScope, $ionicLoading, APIFactory, $cordovaCamera) {
   //must be in every controller to ensure user is logged in
   $scope.$on('$ionicView.enter', function(e) {
-    console.log('dashboard entered');
-    if (!$scope.user){
-      $scope.showLogin();
-    }
+    // console.log('dashboard entered');
+    // if (!$scope.user){
+    //   $scope.showLogin();
+    // }
   });
   $scope.refreshUserDevices = function() {
     APIFactory.getUserDevices($scope)
@@ -152,6 +159,32 @@ angular.module('homebee.controllers', ['homebee.factories', 'homebee.session'])
     $timeout(2000).then(function(){
       $scope.$broadcast('scroll.refreshComplete');
     })
+  }
+})
+.controller('LogCtrl', function($scope, $timeout, $ionicModal, APIFactory) {
+  $scope.$on('$ionicView.enter', function(e) {
+  });
+  $scope.hideLog = function(){
+    $scope._log.hide();
+  }
+  $scope.showLog = function(title, description){
+    try
+    {
+      $scope.log = {title: title, description: JSON.stringify(JSON.parse(description), null, 4)};
+    }
+    catch(e)
+    {
+      $scope.log = {title: title, description: description};
+    }
+    $ionicModal.fromTemplateUrl('templates/log.html', {
+      scope: $scope,
+      animation: 'slide-in-left',
+      backdropClickToClose: true,
+      hardwareBackButtonClose: true
+    }).then(function(modal) {
+      $scope._log = modal;
+      modal.show();
+    });
   }
 })
 

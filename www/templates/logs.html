@@ -1,7 +1,7 @@
 <ion-view view-title="Homebee Dashboard">
   <ion-content>
     <ion-list ng-repeat="log in logs" ng-if="logs.length >0">
-      <ion-item>
+      <ion-item ng-click="showLog('{{log.time}}', '{{log.message}}')">
         {{log.time}}> {{log.message}}
       </ion-item>
     </ion-list>

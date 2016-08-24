@@ -63,7 +63,7 @@ angular.module('homebee', ['ionic', 'ngCordova', 'homebee.controllers', 'homebee
     views: {
       'menuContent': {
         templateUrl: 'templates/logs.html',
-        controller: 'AdminCtrl'
+        controller: 'LogCtrl'
       }
     }
   })
