@@ -2,8 +2,8 @@
 # http://git-scm.com/docs/gitignore
 
 #node_modules/
-#www/build/
-platforms/
+www/build/
+#platforms/
 #plugins/
 *.swp
 .DS_Store
